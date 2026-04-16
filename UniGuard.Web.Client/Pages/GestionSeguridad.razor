@@ -1,0 +1,263 @@
+﻿@page "/gestion-seguridad"
+@rendermode InteractiveAuto
+@using UniGuard.Shared
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+
+<div class="container mt-4">
+    <div class="card shadow-lg border-primary">
+        <div class="card-header bg-primary text-white text-center">
+            <h3>🛡️ Control de Acceso UniGuard (MODO SEGURIDAD)</h3>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <input type="text" @bind="cedulaBusqueda" class="form-control form-control-lg"
+                           placeholder="Digite Cédula del Estudiante..."
+                           @onkeyup="@(async (e) => { if (e.Key == "Enter") await Buscar(); })" />
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-dark btn-lg flex-grow-1" @onclick="Buscar">🔍 BUSCAR</button>
+
+                        @if (userRole == "Administrador" && estudiante == null && !string.IsNullOrEmpty(cedulaBusqueda))
+                        {
+                            <button class="btn btn-success btn-lg" @onclick="IrARegistrar">
+                                <i class="bi bi-person-plus-fill"></i> REGISTRAR
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            @if (estudiante != null)
+            {
+                <div class="row border p-3 bg-light rounded shadow-sm animate__animated animate__fadeIn">
+                    <div class="col-md-4 text-center border-end">
+                        @if (!string.IsNullOrEmpty(estudiante.FotoBase64))
+                        {
+                            <img src="@estudiante.FotoBase64" class="rounded shadow mb-3"
+                                 style="width: 100%; max-width: 250px; border: 5px solid white; height: 250px; object-fit: cover;" />
+                        }
+                        else
+                        {
+                            <div class="rounded bg-secondary d-flex align-items-center justify-content-center mx-auto mb-3"
+                                 style="width: 250px; height: 250px; border: 5px solid white;">
+                                <i class="bi bi-person text-white" style="font-size: 5rem;"></i>
+                            </div>
+                        }
+                        <h4 class="text-uppercase fw-bold text-primary">@estudiante.Nombres @estudiante.Apellidos</h4>
+                        <p class="badge bg-secondary fs-6">Documento: @estudiante.Documento</p>
+                    </div>
+
+                    <div class="col-md-8">
+                        <h5 class="fw-bold text-success"><i class="bi bi-plus-circle"></i> Nuevo Registro de Equipo</h5>
+                        <div class="p-3 bg-white rounded border mb-4 shadow-sm">
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <label class="form-label small fw-bold">Número de Serial</label>
+                                    <input type="text" @bind="nuevoSerial" class="form-control form-control-sm" placeholder="Ej: SN-98765" />
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <label class="form-label small fw-bold">Marca</label>
+                                    <select class="form-select form-select-sm" @bind="nuevaMarcaId">
+                                        <option value="0">-- Seleccione Marca --</option>
+                                        <option value="1">HP</option>
+                                        <option value="2">Lenovo</option>
+                                        <option value="3">Dell</option>
+                                        <option value="4">Apple</option>
+                                        <option value="5">Asus</option>
+                                        <option value="6">Acer</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button class="btn btn-primary btn-sm w-100 mt-1 fw-bold"
+                                    @onclick="VincularEquipo"
+                                    disabled="@(string.IsNullOrWhiteSpace(nuevoSerial) || nuevaMarcaId == 0 || mensaje.Contains("⏳"))">
+                                💾 GUARDAR Y REGISTRAR ENTRADA
+                            </button>
+                        </div>
+
+                        <h5 class="fw-bold"><i class="bi bi-laptop"></i> Equipos Vinculados:</h5>
+                        <div class="list-group shadow-sm">
+                            @if (estudiante.Equipos != null && estudiante.Equipos.Any())
+                            {
+                                @foreach (var eq in estudiante.Equipos)
+                                {
+                                    <div class="list-group-item d-flex justify-content-between align-items-center mb-2">
+                                        <div>
+                                            <span class="fw-bold">@eq.Serial</span>
+                                            <span class="badge bg-info text-dark ms-2">@(eq.Marca?.Nombre ?? "Marca")</span>
+                                            <br />
+                                            <small class="badge @(eq.EstadoActualId == 1 ? "bg-success" : "bg-warning text-dark")">
+                                                @(eq.EstadoActualId == 1 ? "DENTRO" : "FUERA")
+                                            </small>
+                                        </div>
+                                        <div>
+                                            @if (eq.EstadoActualId == 2)
+                                            {
+                                                <button class="btn btn-success" @onclick="() => ProcesarMovimiento(eq, 1)">📥 ENTRADA</button>
+                                            }
+                                            else
+                                            {
+                                                <button class="btn btn-warning" @onclick="() => ProcesarMovimiento(eq, 2)">📤 SALIDA</button>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="alert alert-light text-center">Este estudiante no tiene equipos registrados.</div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(mensaje))
+            {
+                <div class="alert @(mensaje.Contains("❌") ? "alert-danger" : "alert-info") mt-3 text-center">@mensaje</div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private string cedulaBusqueda = "";
+    private string nuevoSerial = "";
+    private int nuevaMarcaId = 0;
+    private string mensaje = "";
+    private Estudiante? estudiante;
+    private string? userRole;
+
+    private async Task ConfigurarSeguridad()
+    {
+        var token = await JS.InvokeAsync<string>("localStorage.getItem", "authToken");
+        if (!string.IsNullOrEmpty(token))
+        {
+            Http.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        }
+    }
+
+    private async Task<int> ObtenerUsuarioId()
+    {
+        var idStr = await JS.InvokeAsync<string>("localStorage.getItem", "userId");
+        return int.TryParse(idStr, out var id) ? id : 0;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            userRole = await JS.InvokeAsync<string>("localStorage.getItem", "userRole");
+            if (string.IsNullOrEmpty(userRole)) Nav.NavigateTo("/", true);
+            StateHasChanged();
+        }
+    }
+
+    private void IrARegistrar() => Nav.NavigateTo($"/registrar-estudiante?cedula={cedulaBusqueda}");
+
+    private async Task Buscar()
+    {
+        if (string.IsNullOrWhiteSpace(cedulaBusqueda)) return;
+
+        mensaje = "🔍 Buscando...";
+        try
+        {
+            await ConfigurarSeguridad();
+            // CORRECCIÓN DE RUTA AQUÍ:
+            var result = await Http.GetAsync($"api/Estudiantes/buscar-por-documento/{cedulaBusqueda}");
+
+            if (result.IsSuccessStatusCode)
+            {
+                estudiante = await result.Content.ReadFromJsonAsync<Estudiante>();
+                mensaje = "";
+            }
+            else
+            {
+                estudiante = null;
+                mensaje = "❌ Estudiante no encontrado.";
+            }
+        }
+        catch (Exception) { mensaje = "❌ Error de conexión."; }
+    }
+
+    private async Task ProcesarMovimiento(Equipo equipo, int nuevoEstado)
+    {
+        try
+        {
+            mensaje = "⏳ Registrando...";
+            await ConfigurarSeguridad();
+            int idGuardia = await ObtenerUsuarioId();
+
+            var movimiento = new Movimiento
+            {
+                EquipoId = equipo.Id,
+                TipoMovimiento = (nuevoEstado == 1) ? "Entrada" : "Salida",
+                FechaHora = DateTime.Now,
+                Observaciones = "Registro rápido en portería",
+                UsuarioSistemaId = idGuardia
+            };
+
+            var resp = await Http.PostAsJsonAsync("api/Movimientos", movimiento);
+            if (resp.IsSuccessStatusCode)
+            {
+                mensaje = (nuevoEstado == 1) ? "✅ ENTRADA registrada" : "✅ SALIDA registrada";
+                await Buscar();
+            }
+            else { mensaje = "❌ Error al procesar movimiento."; }
+        }
+        catch (Exception ex) { mensaje = "❌ Error: " + ex.Message; }
+    }
+
+    private async Task VincularEquipo()
+    {
+        if (estudiante == null || string.IsNullOrWhiteSpace(nuevoSerial) || nuevaMarcaId == 0) return;
+
+        try
+        {
+            mensaje = "⏳ Verificando y vinculando...";
+            await ConfigurarSeguridad();
+            int idGuardia = await ObtenerUsuarioId();
+
+            var equipo = new Equipo
+            {
+                Serial = nuevoSerial.Trim().ToUpper(),
+                MarcaId = nuevaMarcaId,
+                EstudianteId = estudiante.Id,
+                EstadoActualId = 1,
+                FechaRegistro = DateTime.Now
+            };
+
+            var respEq = await Http.PostAsJsonAsync("api/Equipos", equipo);
+
+            if (respEq.IsSuccessStatusCode)
+            {
+                var eqGuardado = await respEq.Content.ReadFromJsonAsync<Equipo>();
+
+                await Http.PostAsJsonAsync("api/Movimientos", new Movimiento
+                {
+                    EquipoId = eqGuardado!.Id,
+                    TipoMovimiento = "Entrada",
+                    FechaHora = DateTime.Now,
+                    Observaciones = "Registro inicial de equipo",
+                    UsuarioSistemaId = idGuardia
+                });
+
+                nuevoSerial = ""; nuevaMarcaId = 0;
+                mensaje = "✅ Equipo vinculado correctamente.";
+                await Buscar();
+            }
+            else
+            {
+                var errorServidor = await respEq.Content.ReadAsStringAsync();
+                mensaje = string.IsNullOrEmpty(errorServidor) ? "❌ Error al vincular equipo." : errorServidor;
+            }
+        }
+        catch (Exception ex) { mensaje = "❌ Error técnico: " + ex.Message; }
+    }
+}

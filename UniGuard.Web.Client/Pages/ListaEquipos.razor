@@ -1,0 +1,63 @@
+﻿@page "/inventario-equipos"
+@using UniGuard.Shared
+@inject HttpClient Http
+
+<div class="container mt-4">
+    <h2 class="text-primary">Inventario de Equipos</h2>
+    <hr />
+
+    @if (equipos == null)
+    {
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p>Conectando con la base de datos...</p>
+        </div>
+    }
+    else if (!equipos.Any())
+    {
+        <div class="alert alert-warning">
+            El esqueleto está listo, pero no hay equipos registrados en la base de datos de Azure.
+        </div>
+    }
+    else
+    {
+        <table class="table table-striped shadow-sm">
+            <thead class="table-dark">
+                <tr>
+                    <th>Serial</th>
+                    <th>Marca</th>
+                    <th>ID Propietario</th>
+                    <th>Fecha Registro</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var e in equipos)
+                {
+                    <tr>
+                        <td>@e.Serial</td>
+                        <td>@e.Marca</td>
+                        <td>@e.EstudianteId</td>
+                        <td>@e.FechaRegistro.ToShortDateString()</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+@code {
+    private List<Equipo>? equipos;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Esta es la conexión vital del esqueleto
+            equipos = await Http.GetFromJsonAsync<List<Equipo>>("api/Equipos");
+        }
+        catch
+        {
+            equipos = new List<Equipo>();
+        }
+    }
+}

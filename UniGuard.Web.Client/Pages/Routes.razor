@@ -1,0 +1,16 @@
+﻿@namespace UniGuard.Web.Client
+@using Microsoft.AspNetCore.Components.Routing
+@using UniGuard.Web.Client.Layout
+
+<Router AppAssembly="@typeof(Routes).Assembly">
+    <Found Context="routeData">
+        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+    </Found>
+    <NotFound>
+        <PageTitle>Not found</PageTitle>
+        <LayoutView Layout="@typeof(MainLayout)">
+            <p role="alert">Lo siento, no hay nada en esta dirección.</p>
+        </LayoutView>
+    </NotFound>
+</Router>

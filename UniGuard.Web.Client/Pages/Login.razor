@@ -1,0 +1,123 @@
+﻿@page "/"
+@using UniGuard.Shared
+@using System.Text.Json
+@inject HttpClient Http
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 85vh;">
+    <div class="card shadow-lg border-0" style="width: 400px; border-radius: 15px;">
+        <div class="card-header bg-primary text-white text-center py-4" style="border-radius: 15px 15px 0 0;">
+            <h3 class="fw-bold mb-0">🛡️ UniGuard Pro</h3>
+            <small>Sistema de Control de Seguridad</small>
+        </div>
+        <div class="card-body p-4">
+            <div class="text-center mb-4">
+                <i class="bi bi-shield-lock-fill text-primary" style="font-size: 3rem;"></i>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Usuario</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light"><i class="bi bi-person"></i></span>
+                    <input @bind="usuario" type="text" class="form-control" placeholder="Nombre de usuario"
+                           @onkeyup="@(async (e) => { if (e.Key == "Enter") await ProcesarLogin(); })" />
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-bold">Contraseña</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light"><i class="bi bi-key"></i></span>
+                    <input @bind="password" type="password" class="form-control" placeholder="••••••••"
+                           @onkeyup="@(async (e) => { if (e.Key == "Enter") await ProcesarLogin(); })" />
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(mensajeError))
+            {
+                <div class="alert alert-danger py-2 text-center animate__animated animate__shakeX">
+                    <i class="bi bi-exclamation-triangle-fill"></i> @mensajeError
+                </div>
+            }
+
+            <button class="btn btn-primary w-100 py-2 fw-bold shadow" @onclick="ProcesarLogin" disabled="@cargando">
+                @if (cargando)
+                {
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    <span> VERIFICANDO...</span>
+                }
+                else
+                {
+                    <span>INGRESAR AL SISTEMA</span>
+                }
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string usuario = "";
+    private string password = "";
+    private string mensajeError = "";
+    private bool cargando = false;
+
+    private async Task ProcesarLogin()
+    {
+        if (string.IsNullOrEmpty(usuario) || string.IsNullOrEmpty(password))
+        {
+            mensajeError = "Por favor, complete todos los campos.";
+            return;
+        }
+
+        try
+        {
+            cargando = true;
+            mensajeError = "";
+
+            // Creamos el objeto para enviar al controlador
+            var loginData = new { Usuario = usuario, Password = password };
+
+            // Llamamos a la API de Usuarios (Asegúrate de tener el UsuariosController creado)
+            var response = await Http.PostAsJsonAsync("api/Usuarios/login", loginData);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                using var doc = JsonDocument.Parse(content);
+                var root = doc.RootElement;
+
+                // Extraemos la información del JSON que devuelve el servidor
+                string nombreRol = root.GetProperty("rol").GetString() ?? "Guardia";
+                int userId = root.GetProperty("id").GetInt32();
+
+                // GUARDAMOS EN EL NAVEGADOR
+                await JS.InvokeVoidAsync("localStorage.setItem", "userRole", nombreRol);
+                await JS.InvokeVoidAsync("localStorage.setItem", "userId", userId.ToString());
+
+                // Si es Admin, lo mandamos a la lista, si es Guardia a control de acceso
+                if (nombreRol == "Administrador")
+                {
+                    Nav.NavigateTo("/lista-estudiantes", true);
+                }
+                else
+                {
+                    Nav.NavigateTo("/gestion-seguridad", true);
+                }
+            }
+            else
+            {
+                mensajeError = "Usuario o contraseña incorrectos.";
+            }
+        }
+        catch (Exception ex)
+        {
+            mensajeError = "Error: No se pudo conectar con el servidor.";
+            Console.WriteLine(ex.Message);
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+}

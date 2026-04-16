@@ -1,0 +1,118 @@
+﻿@page "/registrar-equipo"
+@rendermode InteractiveAuto
+@using UniGuard.Shared
+@inject HttpClient Http
+@inject NavigationManager Nav
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white text-center p-4">
+                    <h2 class="fw-bold"><i class="bi bi-laptop"></i> Registro de Equipo Nuevo</h2>
+                    <p class="mb-0">Vincule un dispositivo al inventario de seguridad</p>
+                </div>
+                <div class="card-body p-5">
+                    <EditForm Model="@equipo" OnValidSubmit="GuardarEquipo">
+                        <DataAnnotationsValidator />
+
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">Documento del Propietario (Estudiante)</label>
+                                <InputText @bind-Value="documentoBusqueda" class="form-control" placeholder="Ingrese la cédula para vincular" />
+                                <small class="text-muted">El estudiante debe estar registrado previamente.</small>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Número de Serial</label>
+                                <InputText @bind-Value="equipo.Serial" class="form-control" placeholder="Ej: SN12345678" />
+                                <ValidationMessage For="@(() => equipo.Serial)" class="text-danger" />
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Marca del Equipo</label>
+                                <select class="form-select" @bind="equipo.Marca">
+                                    <option value="">-- Seleccione Marca --</option>
+                                    <option value="HP">HP</option>
+                                    <option value="Lenovo">Lenovo</option>
+                                    <option value="Dell">Dell</option>
+                                    <option value="Apple">Apple</option>
+                                    <option value="Asus">Asus</option>
+                                    <option value="Otra">Otra</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">Modelo / Referencia</label>
+                                <InputText @bind-Value="equipo.Modelo" class="form-control" placeholder="Ej: Pavilion 15, ThinkPad X1" />
+                            </div>
+                        </div>
+
+                        <hr class="my-4" />
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg fw-bold">
+                                💾 REGISTRAR EQUIPO EN SISTEMA
+                            </button>
+                            <a href="/" class="btn btn-outline-secondary">Cancelar</a>
+                        </div>
+                    </EditForm>
+
+                    @if (!string.IsNullOrEmpty(mensaje))
+                    {
+                        <div class="alert @(mensaje.Contains("✅") ? "alert-success" : "alert-danger") mt-4 text-center">
+                            @mensaje
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    Equipo equipo = new Equipo();
+    string documentoBusqueda = "";
+    string mensaje = "";
+
+    async Task GuardarEquipo()
+    {
+        mensaje = "⏳ Buscando estudiante y vinculando equipo...";
+
+        try
+        {
+            // 1. Primero buscamos al estudiante por su documento
+            var estRes = await Http.GetAsync($"api/Estudiantes/buscar/{documentoBusqueda}");
+
+            if (estRes.IsSuccessStatusCode)
+            {
+                var estudianteEncontrado = await estRes.Content.ReadFromJsonAsync<Estudiante>();
+                equipo.EstudianteId = estudianteEncontrado.Id;
+
+                // 2. Guardamos el equipo vinculado
+                var response = await Http.PostAsJsonAsync("api/Equipos", equipo);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    mensaje = "✅ ¡Equipo vinculado con éxito!";
+                    equipo = new Equipo(); // Limpiar
+                    documentoBusqueda = "";
+                    await Task.Delay(2000);
+                    Nav.NavigateTo("/lista-equipos");
+                }
+                else
+                {
+                    mensaje = "❌ Error al guardar el equipo.";
+                }
+            }
+            else
+            {
+                mensaje = "❌ Estudiante no encontrado. Regístrelo primero.";
+            }
+        }
+        catch (Exception ex)
+        {
+            mensaje = "❌ Error de conexión: " + ex.Message;
+        }
+    }
+}

@@ -1,0 +1,171 @@
+﻿@page "/registrar-estudiante"
+@rendermode InteractiveAuto
+@using UniGuard.Shared
+@inject HttpClient Http
+@inject IJSRuntime JS
+
+<div class="container mt-4">
+    <div class="card shadow-lg border-0 animate__animated animate__fadeIn">
+        <div class="card-header bg-success text-white text-center p-3">
+            <h3 class="fw-bold"><i class="bi bi-person-plus-fill"></i> Registro de Estudiante Nuevo</h3>
+        </div>
+        <div class="card-body p-4">
+            <EditForm Model="@estudiante" OnValidSubmit="Guardar">
+                <DataAnnotationsValidator />
+
+                <div class="row">
+                    <div class="col-md-5 text-center border-end">
+                        <label class="fw-bold mb-2 text-primary">📸 Captura de Foto en Vivo</label>
+
+                        <div class="mb-3 position-relative">
+                            <video id="videoEstudiante"
+                                   style="width: 100%; max-width: 250px; height: 180px; object-fit: cover; border-radius: 10px; border: 2px solid #ccc; background: #000;"
+                                   autoplay></video>
+
+                            <div class="mt-2 d-flex justify-content-center gap-2">
+                                <button type="button" class="btn btn-outline-primary btn-sm" @onclick="IniciarCamara">
+                                    <i class="bi bi-camera-video"></i> Iniciar
+                                </button>
+                                <button type="button" class="btn btn-primary btn-sm" @onclick="TomarFoto">
+                                    <i class="bi bi-record-circle"></i> Capturar
+                                </button>
+                            </div>
+                        </div>
+
+                        <label class="fw-bold mb-2 text-success">🖼️ Resultado de la Foto</label>
+                        <div class="mb-3">
+                            @if (!string.IsNullOrEmpty(estudiante.FotoBase64))
+                            {
+                                <img src="@estudiante.FotoBase64" class="img-thumbnail shadow-sm animate__animated animate__fadeIn"
+                                     style="width: 200px; height: 200px; object-fit: cover; border-radius: 10px; border: 3px solid #198754;" />
+                            }
+                            else
+                            {
+                                <div class="bg-light mx-auto border d-flex flex-column align-items-center justify-content-center shadow-sm"
+                                     style="width: 200px; height: 200px; border-radius: 10px; color: #adb5bd; border: 2px dashed #ccc;">
+                                    <i class="bi bi-person-bounding-box fs-1"></i>
+                                    <span class="small">Sin Captura</span>
+                                </div>
+                            }
+                        </div>
+                        <canvas id="canvasEstudiante" style="display:none;"></canvas>
+                        <small class="text-muted d-block mt-1">Capture la cara del estudiante claramente.</small>
+                    </div>
+
+                    <div class="col-md-7">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="fw-bold">Número de Cédula</label>
+                                <InputText @bind-Value="estudiante.Documento" class="form-control" placeholder="Ej: 1109..." />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="fw-bold">Nombres</label>
+                                <InputText @bind-Value="estudiante.Nombres" class="form-control" placeholder="Escriba los nombres" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="fw-bold">Apellidos</label>
+                                <InputText @bind-Value="estudiante.Apellidos" class="form-control" placeholder="Escriba los apellidos" />
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="fw-bold">Estado Inicial</label>
+                                <select class="form-select" @onchange="@(e => estudiante.EstaActivo = bool.Parse(e.Value?.ToString() ?? "true"))">
+                                    <option value="true">✅ ACTIVO (Permitir Ingreso)</option>
+                                    <option value="false">❌ INACTIVO (Bloqueado)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit"
+                                    class="btn btn-success btn-lg mt-4 fw-bold shadow-sm"
+                                    disabled="@CamposIncompletos">
+                                <i class="bi bi-person-check"></i> GUARDAR REGISTRO
+                            </button>
+                        </div>
+
+                        @if (CamposIncompletos)
+                        {
+                            <div class="alert alert-warning mt-3 py-1 text-center border-0 shadow-sm animate__animated animate__headShake">
+                                <small><i class="bi bi-info-circle"></i> Complete todos los campos y tome la foto para habilitar.</small>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </EditForm>
+
+            @if (!string.IsNullOrEmpty(mensaje))
+            {
+                <div class="alert @(mensaje.Contains("éxito") ? "alert-success" : "alert-danger") mt-4 text-center animate__animated animate__bounceIn">
+                    @mensaje
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    Estudiante estudiante = new Estudiante { EstaActivo = true };
+    string mensaje = "";
+
+    // Valida que no falte nada para poder guardar
+    private bool CamposIncompletos =>
+        string.IsNullOrWhiteSpace(estudiante.Documento) ||
+        string.IsNullOrWhiteSpace(estudiante.Nombres) ||
+        string.IsNullOrWhiteSpace(estudiante.Apellidos) ||
+        string.IsNullOrEmpty(estudiante.FotoBase64);
+
+    async Task IniciarCamara()
+    {
+        mensaje = "⏳ Encendiendo cámara...";
+        // Llama a la función JS definida en camara.js
+        var exito = await JS.InvokeAsync<bool>("iniciarCamara", "videoEstudiante");
+        mensaje = exito ? "✅ Cámara lista." : "❌ No se pudo acceder a la cámara.";
+    }
+
+    async Task TomarFoto()
+    {
+        try
+        {
+            // Captura la imagen del stream de video
+            var data = await JS.InvokeAsync<string>("capturarFoto", "videoEstudiante", "canvasEstudiante");
+
+            if (!string.IsNullOrEmpty(data))
+            {
+                estudiante.FotoBase64 = data;
+                mensaje = "✅ Foto capturada con éxito.";
+
+                // 🔥 CORRECCIÓN: Notifica a Blazor que debe redibujar la imagen del resultado
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            mensaje = "❌ Error al capturar la imagen.";
+            Console.WriteLine(ex.Message);
+        }
+    }
+
+    async Task Guardar()
+    {
+        mensaje = "⏳ Guardando en UniGuard...";
+        try
+        {
+            var res = await Http.PostAsJsonAsync("api/Estudiantes", estudiante);
+            if (res.IsSuccessStatusCode)
+            {
+                mensaje = "✅ ¡Estudiante registrado con éxito!";
+                estudiante = new Estudiante { EstaActivo = true }; // Limpia el formulario
+                StateHasChanged();
+            }
+            else
+            {
+                mensaje = "❌ Error en el servidor. ¿Esa cédula ya existe?";
+            }
+        }
+        catch (Exception)
+        {
+            mensaje = "❌ Error de conexión con el servidor.";
+        }
+    }
+}

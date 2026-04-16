@@ -1,0 +1,128 @@
+﻿@page "/historial"
+@using UniGuard.Shared
+@inject HttpClient Http
+@rendermode InteractiveAuto
+
+<div class="container mt-4 mb-5">
+    <div class="card shadow-lg border-0" style="border-radius: 15px;">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center py-3" style="border-radius: 15px 15px 0 0;">
+            <h3 class="mb-0"><i class="bi bi-journal-text me-2"></i> Bitácora Global</h3>
+            <button class="btn btn-outline-light btn-sm" @onclick="CargarDatos">
+                <i class="bi bi-arrow-clockwise"></i> Actualizar
+            </button>
+        </div>
+
+        <div class="card-body p-4">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text bg-primary text-white border-0"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control border-primary"
+                               placeholder="Buscar por estudiante o serial..."
+                               @bind="textoBusqueda" @bind:event="oninput" />
+                    </div>
+                </div>
+            </div>
+
+            @if (movimientos == null)
+            {
+                <div class="text-center p-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-3 text-muted">Cargando historial...</p>
+                </div>
+            }
+            else if (!movimientosFiltrados.Any())
+            {
+                <div class="alert alert-warning text-center">
+                    No se encontraron registros.
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle border">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Fecha / Hora</th>
+                                <th>Estudiante</th>
+                                <th>Equipo</th>
+                                <th class="text-center">Tipo</th>
+                                <th>Guardia</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var mov in movimientosFiltrados)
+                            {
+                                <tr>
+                                    <td class="small">
+                                        @mov.FechaHora.ToString("dd/MM/yyyy HH:mm")
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold">@mov.Equipo?.Estudiante?.Nombres @mov.Equipo?.Estudiante?.Apellidos</div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">@mov.Equipo?.Marca</span>
+                                        <div class="small">SN: @mov.Equipo?.Serial</div>
+                                    </td>
+                                    <td class="text-center">
+                                        @if (mov.TipoMovimiento?.ToLower() == "entrada")
+                                        {
+                                            <span class="badge bg-success w-75">ENTRADA</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger w-75">SALIDA</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <small class="fw-bold text-muted">
+                                            <i class="bi bi-person-badge"></i> @(mov.UsuarioSistema?.NombreUsuario ?? "Admin")
+                                        </small>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<Movimiento>? movimientos;
+    private string textoBusqueda = "";
+
+    // CORRECCIÓN DEL ERROR CS1929: Simplificamos el filtro para evitar conflictos de tipos
+    private List<Movimiento> movimientosFiltrados
+    {
+        get
+        {
+            if (movimientos == null) return new List<Movimiento>();
+            if (string.IsNullOrWhiteSpace(textoBusqueda)) return movimientos;
+
+            return movimientos.Where(m =>
+                (m.Equipo?.Estudiante?.Nombres != null && m.Equipo.Estudiante.Nombres.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)) ||
+                (m.Equipo?.Serial != null && m.Equipo.Serial.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase))
+            ).ToList();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        try
+        {
+            movimientos = await Http.GetFromJsonAsync<List<Movimiento>>("api/Movimientos/detallado");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+            movimientos = new List<Movimiento>();
+        }
+    }
+}

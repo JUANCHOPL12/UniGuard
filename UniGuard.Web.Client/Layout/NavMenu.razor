@@ -1,0 +1,99 @@
+﻿@using Microsoft.JSInterop
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+<div class="top-row ps-3 navbar navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">🛡️ UniGuard Pro</a>
+    </div>
+</div>
+
+<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+
+<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
+    <nav class="flex-column">
+
+        @* INICIO: Visible siempre *@
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="bi bi-house-door-fill" aria-hidden="true"></span> Inicio
+            </NavLink>
+        </div>
+
+        @* --- VALIDACIÓN DE SESIÓN --- *@
+        @if (!string.IsNullOrEmpty(UserRole))
+        {
+            @* SECCIÓN DE PORTERÍA: Visible para Admin y Seguridad *@
+            <div class="dropdown-divider border-secondary mx-3 my-2"></div>
+            <p class="text-white-50 px-3 mt-3 mb-1 small fw-bold">OPERACIÓN (PORTERÍA)</p>
+
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="gestion-seguridad">
+                    <span class="bi bi-shield-lock-fill" aria-hidden="true"></span> Control de Acceso
+                </NavLink>
+            </div>
+
+            @* SECCIÓN DE ADMINISTRACIÓN: SOLO para el Admin *@
+            @if (UserRole == "Administrador")
+            {
+                <div class="dropdown-divider border-secondary mx-3 my-2"></div>
+                <p class="text-white-50 px-3 mt-3 mb-1 small fw-bold">ADMINISTRACIÓN</p>
+
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="lista-estudiantes">
+                        <span class="bi bi-people-fill" aria-hidden="true"></span> Gestión Estudiantes
+                    </NavLink>
+                </div>
+
+                <div class="nav-item px-3">
+                    @* Corregido el href a 'historial' según tu archivo Historial.razor *@
+                    <NavLink class="nav-link" href="historial">
+                        <span class="bi bi-journal-text" aria-hidden="true"></span> Historial Global
+                    </NavLink>
+                </div>
+            }
+
+            @* BOTÓN DE CERRAR SESIÓN: Estilizado *@
+            <div class="mt-4 px-3 mb-4">
+                <button class="btn btn-danger btn-sm w-100 shadow-sm" @onclick="CerrarSesion">
+                    <i class="bi bi-box-arrow-right"></i> Salir del Sistema
+                </button>
+            </div>
+        }
+        else
+        {
+            @* Si no hay sesión, invitar a loguearse *@
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="login">
+                    <span class="bi bi-person-badge-fill" aria-hidden="true"></span> Iniciar Sesión
+                </NavLink>
+            </div>
+        }
+    </nav>
+</div>
+
+@code {
+    private string? UserRole;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Buscamos el rol guardado en el navegador
+            UserRole = await JS.InvokeAsync<string>("localStorage.getItem", "userRole");
+            StateHasChanged();
+        }
+    }
+
+    private async Task CerrarSesion()
+    {
+        // Limpiamos todo el rastro del usuario
+        await JS.InvokeVoidAsync("localStorage.removeItem", "userRole");
+        await JS.InvokeVoidAsync("localStorage.removeItem", "userId");
+        await JS.InvokeVoidAsync("localStorage.removeItem", "authToken");
+
+        UserRole = null;
+        // Redirigir al inicio y recargar para limpiar el estado
+        Navigation.NavigateTo("/", true);
+    }
+}

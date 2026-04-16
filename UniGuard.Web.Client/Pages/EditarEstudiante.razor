@@ -1,0 +1,110 @@
+﻿@page "/editar-estudiante/{Id:int}"
+@using UniGuard.Shared
+@inject HttpClient Http
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+@rendermode InteractiveAuto
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow border-0">
+                <div class="card-header bg-warning text-dark fw-bold">
+                    <i class="bi bi-pencil-square"></i> EDITAR INFORMACIÓN DEL ESTUDIANTE
+                </div>
+                <div class="card-body">
+                    @if (estudiante == null)
+                    {
+                        <div class="text-center p-5">
+                            <div class="spinner-border text-warning" role="status"></div>
+                            <p>Cargando datos para editar...</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <EditForm Model="estudiante" OnValidSubmit="GuardarCambios">
+                            <DataAnnotationsValidator />
+
+                            <div class="row">
+                                <div class="col-md-4 text-center mb-3">
+                                    <label class="fw-bold d-block mb-2">Foto de Perfil</label>
+                                    <img src="@estudiante.FotoBase64" class="img-thumbnail mb-2" style="width: 150px; height: 150px; object-fit: cover;" />
+                                    <InputFile OnChange="OnInputFileChange" class="form-control form-control-sm" />
+                                </div>
+
+                                <div class="col-md-8">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Documento (No editable)</label>
+                                        <input type="text" class="form-control bg-light" value="@estudiante.Documento" disabled />
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Nombres</label>
+                                        <InputText @bind-Value="estudiante.Nombres" class="form-control text-uppercase" />
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Apellidos</label>
+                                        <InputText @bind-Value="estudiante.Apellidos" class="form-control text-uppercase" />
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Dirección</label>
+                                        <InputText @bind-Value="estudiante.Direccion" class="form-control" />
+                                    </div>
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" @bind="estudiante.EstaActivo" id="estadoCheck">
+                                        <label class="form-check-label fw-bold" for="estadoCheck">
+                                            Usuario Activo / Acceso Permitido
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-end gap-2 mt-4">
+                                <button type="button" class="btn btn-secondary" @onclick="Cancelar">Cancelar</button>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-save"></i> Guardar Cambios
+                                </button>
+                            </div>
+                        </EditForm>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private Estudiante? estudiante;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Cargamos los datos actuales
+        estudiante = await Http.GetFromJsonAsync<Estudiante>($"api/Estudiantes/por-id/{Id}");
+    }
+
+    private async Task OnInputFileChange(InputFileChangeEventArgs e)
+    {
+        var format = "image/png";
+        var resizedImage = await e.File.RequestImageFileAsync(format, 300, 300);
+        var buffer = new byte[resizedImage.Size];
+        await resizedImage.OpenReadStream().ReadAsync(buffer);
+        estudiante!.FotoBase64 = $"data:{format};base64,{Convert.ToBase64String(buffer)}";
+    }
+
+    private async Task GuardarCambios()
+    {
+        var response = await Http.PutAsJsonAsync($"api/Estudiantes/{Id}", estudiante);
+
+        if (response.IsSuccessStatusCode)
+        {
+            await JS.InvokeVoidAsync("alert", "Datos actualizados correctamente");
+            Nav.NavigateTo($"/perfil-estudiante/{Id}");
+        }
+        else
+        {
+            await JS.InvokeVoidAsync("alert", "Error al actualizar");
+        }
+    }
+
+    private void Cancelar() => Nav.NavigateTo($"/perfil-estudiante/{Id}");
+}

@@ -1,0 +1,43 @@
+﻿@page "/home"
+
+<div class="container mt-5">
+    <div class="text-center mb-5">
+        <h1 class="display-3 fw-bold text-primary">🛡️ Sistema UniGuard</h1>
+        <p class="lead text-muted">Control de Acceso y Registro de Equipos</p>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+        <div class="col-md-5">
+            <div class="card h-100 shadow-lg border-0 bg-success text-white">
+                <div class="card-body text-center p-5">
+                    <i class="bi bi-person-plus-fill" style="font-size: 4rem;"></i>
+                    <h2 class="mt-3 fw-bold">1. Registrar Estudiante</h2>
+                    <p class="mb-4">Cree el perfil del estudiante con su foto y datos básicos para la base de datos.</p>
+                    <a href="registrar-estudiante" class="btn btn-light btn-lg fw-bold w-100 shadow-sm">EMPEZAR REGISTRO</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-5">
+            <div class="card h-100 shadow-lg border-0 bg-primary text-white">
+                <div class="card-body text-center p-5">
+                    <i class="bi bi-shield-check" style="font-size: 4rem;"></i>
+                    <h2 class="mt-3 fw-bold">2. Gestión de Portátiles</h2>
+                    <p class="mb-4">Busque al estudiante por cédula, verifique su identidad y vincule sus equipos.</p>
+                    <a href="gestion-seguridad" class="btn btn-light btn-lg fw-bold w-100 shadow-sm">IR A SEGURIDAD</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        transition: transform 0.3s ease;
+        cursor: pointer;
+    }
+
+        .card:hover {
+            transform: translateY(-10px);
+        }
+</style>
