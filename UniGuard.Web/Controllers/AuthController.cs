@@ -49,7 +49,7 @@ namespace UniGuard.Web.Controllers
                 rol = usuario.Rol?.Nombre ?? "Sin Rol"
             });
         }
-
+        // metodo privado 
         private string GenerarJwt(UsuarioSistema usuario)
         {
             // USAMOS LA MISMA CLAVE QUE PUSIMOS EN EL PROGRAM.CS
