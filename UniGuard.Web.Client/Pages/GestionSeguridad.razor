@@ -7,24 +7,31 @@
 @inject IJSRuntime JS
 
 <div class="container mt-4">
-    <div class="card shadow-lg border-primary">
-        <div class="card-header bg-primary text-white text-center">
-            <h3>🛡️ Control de Acceso UniGuard (MODO SEGURIDAD)</h3>
+    <div class="card shadow-lg bg-white" style="border: 2px solid #8CC63F;">
+
+        <div class="card-header text-white text-center" style="background-color: #8CC63F; border-bottom: none;">
+            <h3 class="fw-bold mb-0"> ACCESO DE ESTUDIANTES </h3>
         </div>
-        <div class="card-body">
+
+        <div class="card-body bg-white">
             <div class="row mb-4">
                 <div class="col-md-8">
-                    <input type="text" @bind="cedulaBusqueda" class="form-control form-control-lg"
+                    <input type="text" @bind="cedulaBusqueda" class="form-control form-control-lg bg-white"
                            placeholder="Digite Cédula del Estudiante..."
+                           style="border: 2px solid #8CC63F;"
                            @onkeyup="@(async (e) => { if (e.Key == "Enter") await Buscar(); })" />
                 </div>
                 <div class="col-md-4">
                     <div class="d-flex gap-2">
-                        <button class="btn btn-dark btn-lg flex-grow-1" @onclick="Buscar">🔍 BUSCAR</button>
+                        <button class="btn btn-lg flex-grow-1 text-white fw-bold shadow-sm"
+                                style="background-color: #8CC63F; border: none;"
+                                @onclick="Buscar">
+                            BUSCAR
+                        </button>
 
                         @if (userRole == "Administrador" && estudiante == null && !string.IsNullOrEmpty(cedulaBusqueda))
                         {
-                            <button class="btn btn-success btn-lg" @onclick="IrARegistrar">
+                            <button class="btn btn-success btn-lg shadow-sm fw-bold" @onclick="IrARegistrar">
                                 <i class="bi bi-person-plus-fill"></i> REGISTRAR
                             </button>
                         }
@@ -34,35 +41,35 @@
 
             @if (estudiante != null)
             {
-                <div class="row border p-3 bg-light rounded shadow-sm animate__animated animate__fadeIn">
+                <div class="row border p-3 bg-white rounded shadow-sm animate__animated animate__fadeIn" style="border-color: #eee !important;">
                     <div class="col-md-4 text-center border-end">
                         @if (!string.IsNullOrEmpty(estudiante.FotoBase64))
                         {
                             <img src="@estudiante.FotoBase64" class="rounded shadow mb-3"
-                                 style="width: 100%; max-width: 250px; border: 5px solid white; height: 250px; object-fit: cover;" />
+                                 style="width: 100%; max-width: 250px; border: 5px solid #8CC63F; height: 250px; object-fit: cover;" />
                         }
                         else
                         {
-                            <div class="rounded bg-secondary d-flex align-items-center justify-content-center mx-auto mb-3"
-                                 style="width: 250px; height: 250px; border: 5px solid white;">
-                                <i class="bi bi-person text-white" style="font-size: 5rem;"></i>
+                            <div class="rounded d-flex align-items-center justify-content-center mx-auto mb-3 bg-white shadow-sm"
+                                 style="width: 250px; height: 250px; border: 3px dashed #8CC63F;">
+                                <i class="bi bi-person text-muted" style="font-size: 5rem;"></i>
                             </div>
                         }
-                        <h4 class="text-uppercase fw-bold text-primary">@estudiante.Nombres @estudiante.Apellidos</h4>
-                        <p class="badge bg-secondary fs-6">Documento: @estudiante.Documento</p>
+                        <h4 class="text-uppercase fw-bold" style="color: #8CC63F;">@estudiante.Nombres @estudiante.Apellidos</h4>
+                        <p class="badge fs-6 rounded-pill px-3" style="background-color: #8CC63F;">Documento: @estudiante.Documento</p>
                     </div>
 
-                    <div class="col-md-8">
-                        <h5 class="fw-bold text-success"><i class="bi bi-plus-circle"></i> Nuevo Registro de Equipo</h5>
-                        <div class="p-3 bg-white rounded border mb-4 shadow-sm">
+                    <div class="col-md-8 bg-white">
+                        <h5 class="fw-bold" style="color: #8CC63F;"><i class="bi bi-plus-circle"></i> Nuevo Registro de Equipo</h5>
+                        <div class="p-3 bg-white rounded border mb-4 shadow-sm" style="border-top: 5px solid #8CC63F !important;">
                             <div class="row">
                                 <div class="col-md-6 mb-2">
                                     <label class="form-label small fw-bold">Número de Serial</label>
-                                    <input type="text" @bind="nuevoSerial" class="form-control form-control-sm" placeholder="Ej: SN-98765" />
+                                    <input type="text" @bind="nuevoSerial" class="form-control form-control-sm border-1 shadow-sm" placeholder="Ej: SN-98765" />
                                 </div>
                                 <div class="col-md-6 mb-2">
                                     <label class="form-label small fw-bold">Marca</label>
-                                    <select class="form-select form-select-sm" @bind="nuevaMarcaId">
+                                    <select class="form-select form-select-sm border-1 shadow-sm" @bind="nuevaMarcaId">
                                         <option value="0">-- Seleccione Marca --</option>
                                         <option value="1">HP</option>
                                         <option value="2">Lenovo</option>
@@ -73,23 +80,25 @@
                                     </select>
                                 </div>
                             </div>
-                            <button class="btn btn-primary btn-sm w-100 mt-1 fw-bold"
+                            <button class="btn btn-sm w-100 mt-1 fw-bold text-white shadow-sm"
+                                    style="background-color: #8CC63F;"
                                     @onclick="VincularEquipo"
                                     disabled="@(string.IsNullOrWhiteSpace(nuevoSerial) || nuevaMarcaId == 0 || mensaje.Contains("⏳"))">
-                                💾 GUARDAR Y REGISTRAR ENTRADA
+                                💾 GUARDAR EQUIPO
                             </button>
                         </div>
 
-                        <h5 class="fw-bold"><i class="bi bi-laptop"></i> Equipos Vinculados:</h5>
+                        <h5 class="fw-bold text-dark"><i class="bi bi-laptop"></i> Equipos Vinculados:</h5>
                         <div class="list-group shadow-sm">
                             @if (estudiante.Equipos != null && estudiante.Equipos.Any())
                             {
                                 @foreach (var eq in estudiante.Equipos)
                                 {
-                                    <div class="list-group-item d-flex justify-content-between align-items-center mb-2">
+                                    <div class="list-group-item d-flex justify-content-between align-items-center mb-2 bg-white border shadow-sm"
+                                         style="border-left: 6px solid #8CC63F !important;">
                                         <div>
-                                            <span class="fw-bold">@eq.Serial</span>
-                                            <span class="badge bg-info text-dark ms-2">@(eq.Marca?.Nombre ?? "Marca")</span>
+                                            <span class="fw-bold text-dark">@eq.Serial</span>
+                                            <span class="badge bg-light text-dark border ms-2">@(eq.Marca?.Nombre ?? "Marca")</span>
                                             <br />
                                             <small class="badge @(eq.EstadoActualId == 1 ? "bg-success" : "bg-warning text-dark")">
                                                 @(eq.EstadoActualId == 1 ? "DENTRO" : "FUERA")
@@ -98,11 +107,11 @@
                                         <div>
                                             @if (eq.EstadoActualId == 2)
                                             {
-                                                <button class="btn btn-success" @onclick="() => ProcesarMovimiento(eq, 1)">📥 ENTRADA</button>
+                                                <button class="btn btn-success fw-bold px-4 shadow-sm" @onclick="() => ProcesarMovimiento(eq, 1)">📥 ENTRADA</button>
                                             }
                                             else
                                             {
-                                                <button class="btn btn-warning" @onclick="() => ProcesarMovimiento(eq, 2)">📤 SALIDA</button>
+                                                <button class="btn btn-warning fw-bold px-4 shadow-sm" @onclick="() => ProcesarMovimiento(eq, 2)">📤 SALIDA</button>
                                             }
                                         </div>
                                     </div>
@@ -110,7 +119,7 @@
                             }
                             else
                             {
-                                <div class="alert alert-light text-center">Este estudiante no tiene equipos registrados.</div>
+                                <div class="alert alert-light text-center border bg-white shadow-sm">Este estudiante no tiene equipos registrados.</div>
                             }
                         </div>
                     </div>
@@ -119,13 +128,17 @@
 
             @if (!string.IsNullOrEmpty(mensaje))
             {
-                <div class="alert @(mensaje.Contains("❌") ? "alert-danger" : "alert-info") mt-3 text-center">@mensaje</div>
+                <div class="alert mt-3 text-center fw-bold shadow-sm bg-white"
+                     style="border: 1px solid #8CC63F; border-left: 8px solid #8CC63F; color: #333;">
+                    @mensaje
+                </div>
             }
         </div>
     </div>
 </div>
 
 @code {
+    // SE MANTIENE TODA TU LÓGICA ORIGINAL PARA EVITAR ERRORES
     private string cedulaBusqueda = "";
     private string nuevoSerial = "";
     private int nuevaMarcaId = 0;
@@ -169,7 +182,6 @@
         try
         {
             await ConfigurarSeguridad();
-            // CORRECCIÓN DE RUTA AQUÍ:
             var result = await Http.GetAsync($"api/Estudiantes/buscar-por-documento/{cedulaBusqueda}");
 
             if (result.IsSuccessStatusCode)
@@ -213,43 +225,36 @@
         }
         catch (Exception ex) { mensaje = "❌ Error: " + ex.Message; }
     }
-
     private async Task VincularEquipo()
     {
         if (estudiante == null || string.IsNullOrWhiteSpace(nuevoSerial) || nuevaMarcaId == 0) return;
 
         try
         {
-            mensaje = "⏳ Verificando y vinculando...";
+            mensaje = "⏳ Vinculando equipo...";
             await ConfigurarSeguridad();
-            int idGuardia = await ObtenerUsuarioId();
 
+            // Creamos el objeto del equipo
+            // IMPORTANTE: Ponemos EstadoActualId = 2 (FUERA) para que no entre de una vez
             var equipo = new Equipo
             {
                 Serial = nuevoSerial.Trim().ToUpper(),
                 MarcaId = nuevaMarcaId,
                 EstudianteId = estudiante.Id,
-                EstadoActualId = 1,
+                EstadoActualId = 2,
                 FechaRegistro = DateTime.Now
             };
 
+            // ENVIAMOS SOLO EL EQUIPO (Eliminé la parte que creaba el Movimiento automáticamente)
             var respEq = await Http.PostAsJsonAsync("api/Equipos", equipo);
 
             if (respEq.IsSuccessStatusCode)
             {
-                var eqGuardado = await respEq.Content.ReadFromJsonAsync<Equipo>();
+                nuevoSerial = "";
+                nuevaMarcaId = 0;
+                mensaje = "✅ Equipo registrado. Ahora puede marcar la ENTRADA abajo.";
 
-                await Http.PostAsJsonAsync("api/Movimientos", new Movimiento
-                {
-                    EquipoId = eqGuardado!.Id,
-                    TipoMovimiento = "Entrada",
-                    FechaHora = DateTime.Now,
-                    Observaciones = "Registro inicial de equipo",
-                    UsuarioSistemaId = idGuardia
-                });
-
-                nuevoSerial = ""; nuevaMarcaId = 0;
-                mensaje = "✅ Equipo vinculado correctamente.";
+                // Refrescamos la interfaz para que el equipo aparezca en la lista de abajo
                 await Buscar();
             }
             else

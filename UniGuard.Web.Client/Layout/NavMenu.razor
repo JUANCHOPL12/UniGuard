@@ -2,75 +2,113 @@
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
 
-<div class="top-row ps-3 navbar navbar-dark bg-dark">
+@* ENCABEZADO: Ahora es blanco con borde sutil *@
+<div class="top-row ps-3 navbar navbar-light" style="background-color: white !important; border-bottom: 1px solid #eee;">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">🛡️ UniGuard Pro</a>
+        <a class="navbar-brand" href="" style="color: #1a1a1a !important; font-weight: 800; font-size: 1.2rem;">
+            UniGuard<span style="color: #8CC63F; font-weight: 400;">Pro</span>
+        </a>
     </div>
 </div>
 
 <input type="checkbox" title="Navigation menu" class="navbar-toggler" />
 
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
+@* CUERPO DEL MENÚ: Fondo blanco y letras oscuras *@
+<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()"
+     style="background-color: white !important; background-image: none !important; border-right: 1px solid #eee;">
     <nav class="flex-column">
 
-        @* INICIO: Visible siempre *@
+        @* INICIO *@
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+            <NavLink class="nav-link custom-nav" href="" Match="NavLinkMatch.All">
                 <span class="bi bi-house-door-fill" aria-hidden="true"></span> Inicio
             </NavLink>
         </div>
 
-        @* --- VALIDACIÓN DE SESIÓN --- *@
         @if (!string.IsNullOrEmpty(UserRole))
         {
-            @* SECCIÓN DE PORTERÍA: Visible para Admin y Seguridad *@
-            <div class="dropdown-divider border-secondary mx-3 my-2"></div>
-            <p class="text-white-50 px-3 mt-3 mb-1 small fw-bold">OPERACIÓN (PORTERÍA)</p>
+            @* SECCIÓN DE PORTERÍA *@
+            <div class="dropdown-divider border-light mx-3 my-2"></div>
+            <p class="section-title">OPERACIÓN (PORTERÍA)</p>
 
             <div class="nav-item px-3">
-                <NavLink class="nav-link" href="gestion-seguridad">
+                <NavLink class="nav-link custom-nav" href="gestion-seguridad">
                     <span class="bi bi-shield-lock-fill" aria-hidden="true"></span> Control de Acceso
                 </NavLink>
             </div>
 
-            @* SECCIÓN DE ADMINISTRACIÓN: SOLO para el Admin *@
             @if (UserRole == "Administrador")
             {
-                <div class="dropdown-divider border-secondary mx-3 my-2"></div>
-                <p class="text-white-50 px-3 mt-3 mb-1 small fw-bold">ADMINISTRACIÓN</p>
+                <div class="dropdown-divider border-light mx-3 my-2"></div>
+                <p class="section-title">ADMINISTRACIÓN</p>
 
                 <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="lista-estudiantes">
+                    <NavLink class="nav-link custom-nav" href="lista-estudiantes">
                         <span class="bi bi-people-fill" aria-hidden="true"></span> Gestión Estudiantes
                     </NavLink>
                 </div>
 
                 <div class="nav-item px-3">
-                    @* Corregido el href a 'historial' según tu archivo Historial.razor *@
-                    <NavLink class="nav-link" href="historial">
+                    <NavLink class="nav-link custom-nav" href="historial">
                         <span class="bi bi-journal-text" aria-hidden="true"></span> Historial Global
                     </NavLink>
                 </div>
             }
 
-            @* BOTÓN DE CERRAR SESIÓN: Estilizado *@
+            @* BOTÓN DE CERRAR SESIÓN *@
             <div class="mt-4 px-3 mb-4">
-                <button class="btn btn-danger btn-sm w-100 shadow-sm" @onclick="CerrarSesion">
-                    <i class="bi bi-box-arrow-right"></i> Salir del Sistema
+                <button class="btn btn-outline-danger btn-sm w-100 shadow-sm fw-bold" @onclick="CerrarSesion" style="border-radius: 10px;">
+                    <i class="bi bi-box-arrow-right"></i> SALIR
                 </button>
             </div>
         }
         else
         {
-            @* Si no hay sesión, invitar a loguearse *@
             <div class="nav-item px-3">
-                <NavLink class="nav-link" href="login">
+                <NavLink class="nav-link custom-nav" href="login">
                     <span class="bi bi-person-badge-fill" aria-hidden="true"></span> Iniciar Sesión
                 </NavLink>
             </div>
         }
     </nav>
 </div>
+
+<style>
+    /* Estilo para los links del menú */
+    .custom-nav {
+        color: #2D3436 !important; /* Texto oscuro */
+        font-weight: 500 !important;
+        border-radius: 10px !important;
+        margin: 2px 0 !important;
+        transition: 0.2s !important;
+    }
+
+        .custom-nav span {
+            color: #8CC63F !important; /* Iconos en verde CUN */
+            margin-right: 12px !important;
+        }
+
+        /* Cuando el link está activo */
+        .custom-nav.active {
+            background-color: #8CC63F !important; /* Fondo verde */
+            color: white !important; /* Letras blancas */
+        }
+
+            .custom-nav.active span {
+                color: white !important; /* Icono blanco cuando está activo */
+            }
+
+    /* Títulos de sección */
+    .section-title {
+        color: #888 !important;
+        padding: 0 1rem;
+        margin-top: 1.5rem;
+        margin-bottom: 0.5rem;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+    }
+</style>
 
 @code {
     private string? UserRole;
@@ -79,7 +117,6 @@
     {
         if (firstRender)
         {
-            // Buscamos el rol guardado en el navegador
             UserRole = await JS.InvokeAsync<string>("localStorage.getItem", "userRole");
             StateHasChanged();
         }
@@ -87,13 +124,10 @@
 
     private async Task CerrarSesion()
     {
-        // Limpiamos todo el rastro del usuario
         await JS.InvokeVoidAsync("localStorage.removeItem", "userRole");
         await JS.InvokeVoidAsync("localStorage.removeItem", "userId");
         await JS.InvokeVoidAsync("localStorage.removeItem", "authToken");
-
         UserRole = null;
-        // Redirigir al inicio y recargar para limpiar el estado
         Navigation.NavigateTo("/", true);
     }
 }

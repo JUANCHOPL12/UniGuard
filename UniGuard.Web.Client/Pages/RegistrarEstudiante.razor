@@ -5,46 +5,49 @@
 @inject IJSRuntime JS
 
 <div class="container mt-4">
-    <div class="card shadow-lg border-0 animate__animated animate__fadeIn">
-        <div class="card-header bg-success text-white text-center p-3">
-            <h3 class="fw-bold"><i class="bi bi-person-plus-fill"></i> Registro de Estudiante Nuevo</h3>
+    <div class="card shadow-lg bg-white" style="border: 2px solid #8CC63F; border-radius: 12px; overflow: hidden;">
+
+        <div class="card-header text-white text-center p-3" style="background-color: #8CC63F; border-bottom: none;">
+            <h3 class="fw-bold mb-0"><i class="bi bi-person-plus-fill"></i> Registro de Estudiante Nuevo</h3>
         </div>
-        <div class="card-body p-4">
+
+        <div class="card-body p-4 bg-white">
             <EditForm Model="@estudiante" OnValidSubmit="Guardar">
                 <DataAnnotationsValidator />
 
                 <div class="row">
                     <div class="col-md-5 text-center border-end">
-                        <label class="fw-bold mb-2 text-primary">📸 Captura de Foto en Vivo</label>
+                        <label class="fw-bold mb-2" style="color: #8CC63F;">📸 Captura de Foto en Vivo</label>
 
                         <div class="mb-3 position-relative">
                             <video id="videoEstudiante"
-                                   style="width: 100%; max-width: 250px; height: 180px; object-fit: cover; border-radius: 10px; border: 2px solid #ccc; background: #000;"
+                                   style="width: 100%; max-width: 250px; height: 180px; object-fit: cover; border-radius: 10px; border: 3px solid #8CC63F; background: #000;"
                                    autoplay></video>
 
                             <div class="mt-2 d-flex justify-content-center gap-2">
-                                <button type="button" class="btn btn-outline-primary btn-sm" @onclick="IniciarCamara">
+                                <button type="button" class="btn btn-outline-dark btn-sm fw-bold" @onclick="IniciarCamara">
                                     <i class="bi bi-camera-video"></i> Iniciar
                                 </button>
-                                <button type="button" class="btn btn-primary btn-sm" @onclick="TomarFoto">
+                                <button type="button" class="btn btn-sm text-white fw-bold shadow-sm"
+                                        style="background-color: #8CC63F;" @onclick="TomarFoto">
                                     <i class="bi bi-record-circle"></i> Capturar
                                 </button>
                             </div>
                         </div>
 
-                        <label class="fw-bold mb-2 text-success">🖼️ Resultado de la Foto</label>
+                        <label class="fw-bold mb-2" style="color: #8CC63F;">🖼️ Resultado de la Foto</label>
                         <div class="mb-3">
                             @if (!string.IsNullOrEmpty(estudiante.FotoBase64))
                             {
-                                <img src="@estudiante.FotoBase64" class="img-thumbnail shadow-sm animate__animated animate__fadeIn"
-                                     style="width: 200px; height: 200px; object-fit: cover; border-radius: 10px; border: 3px solid #198754;" />
+                                <img src="@estudiante.FotoBase64" class="shadow-sm animate__animated animate__fadeIn"
+                                     style="width: 200px; height: 200px; object-fit: cover; border-radius: 10px; border: 4px solid #8CC63F;" />
                             }
                             else
                             {
-                                <div class="bg-light mx-auto border d-flex flex-column align-items-center justify-content-center shadow-sm"
-                                     style="width: 200px; height: 200px; border-radius: 10px; color: #adb5bd; border: 2px dashed #ccc;">
+                                <div class="mx-auto d-flex flex-column align-items-center justify-content-center shadow-sm"
+                                     style="width: 200px; height: 200px; border-radius: 10px; color: #8CC63F; border: 2px dashed #8CC63F; background-color: #f9fff0;">
                                     <i class="bi bi-person-bounding-box fs-1"></i>
-                                    <span class="small">Sin Captura</span>
+                                    <span class="small fw-bold">Sin Captura</span>
                                 </div>
                             }
                         </div>
@@ -52,24 +55,28 @@
                         <small class="text-muted d-block mt-1">Capture la cara del estudiante claramente.</small>
                     </div>
 
-                    <div class="col-md-7">
+                    <div class="col-md-7 ps-md-4">
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="fw-bold">Número de Cédula</label>
-                                <InputText @bind-Value="estudiante.Documento" class="form-control" placeholder="Ej: 1109..." />
+                                <label class="fw-bold text-dark small text-uppercase">Número de Cédula</label>
+                                <InputText @bind-Value="estudiante.Documento" class="form-control border-2 shadow-sm"
+                                           placeholder="Ej: 1109..." style="border-color: #eee;" />
                             </div>
                             <div class="col-md-6">
-                                <label class="fw-bold">Nombres</label>
-                                <InputText @bind-Value="estudiante.Nombres" class="form-control" placeholder="Escriba los nombres" />
+                                <label class="fw-bold text-dark small text-uppercase">Nombres</label>
+                                <InputText @bind-Value="estudiante.Nombres" class="form-control border-2 shadow-sm"
+                                           placeholder="Escriba los nombres" style="border-color: #eee;" />
                             </div>
                             <div class="col-md-6">
-                                <label class="fw-bold">Apellidos</label>
-                                <InputText @bind-Value="estudiante.Apellidos" class="form-control" placeholder="Escriba los apellidos" />
+                                <label class="fw-bold text-dark small text-uppercase">Apellidos</label>
+                                <InputText @bind-Value="estudiante.Apellidos" class="form-control border-2 shadow-sm"
+                                           placeholder="Escriba los apellidos" style="border-color: #eee;" />
                             </div>
 
                             <div class="col-md-6">
-                                <label class="fw-bold">Estado Inicial</label>
-                                <select class="form-select" @onchange="@(e => estudiante.EstaActivo = bool.Parse(e.Value?.ToString() ?? "true"))">
+                                <label class="fw-bold text-dark small text-uppercase">Estado Inicial</label>
+                                <select class="form-select border-2 shadow-sm" style="border-color: #eee;"
+                                        @onchange="@(e => estudiante.EstaActivo = bool.Parse(e.Value?.ToString() ?? "true"))">
                                     <option value="true">✅ ACTIVO (Permitir Ingreso)</option>
                                     <option value="false">❌ INACTIVO (Bloqueado)</option>
                                 </select>
@@ -78,7 +85,8 @@
 
                         <div class="d-grid gap-2">
                             <button type="submit"
-                                    class="btn btn-success btn-lg mt-4 fw-bold shadow-sm"
+                                    class="btn btn-lg mt-4 fw-bold shadow text-white"
+                                    style="background-color: #8CC63F; height: 55px; font-size: 1.2rem;"
                                     disabled="@CamposIncompletos">
                                 <i class="bi bi-person-check"></i> GUARDAR REGISTRO
                             </button>
@@ -86,7 +94,8 @@
 
                         @if (CamposIncompletos)
                         {
-                            <div class="alert alert-warning mt-3 py-1 text-center border-0 shadow-sm animate__animated animate__headShake">
+                            <div class="alert mt-3 py-2 text-center border-0 shadow-sm animate__animated animate__headShake"
+                                 style="background-color: #fff3cd; color: #856404; border-left: 5px solid #ffc107 !important;">
                                 <small><i class="bi bi-info-circle"></i> Complete todos los campos y tome la foto para habilitar.</small>
                             </div>
                         }
@@ -96,7 +105,8 @@
 
             @if (!string.IsNullOrEmpty(mensaje))
             {
-                <div class="alert @(mensaje.Contains("éxito") ? "alert-success" : "alert-danger") mt-4 text-center animate__animated animate__bounceIn">
+                <div class="alert mt-4 text-center animate__animated animate__bounceIn shadow-sm fw-bold"
+                     style="background-color: #fff; border: 1px solid #8CC63F; border-left: 8px solid #8CC63F; color: #333;">
                     @mensaje
                 </div>
             }
@@ -105,10 +115,10 @@
 </div>
 
 @code {
+    // SE MANTIENE TODA TU LÓGICA ORIGINAL INTACTA
     Estudiante estudiante = new Estudiante { EstaActivo = true };
     string mensaje = "";
 
-    // Valida que no falte nada para poder guardar
     private bool CamposIncompletos =>
         string.IsNullOrWhiteSpace(estudiante.Documento) ||
         string.IsNullOrWhiteSpace(estudiante.Nombres) ||
@@ -118,7 +128,6 @@
     async Task IniciarCamara()
     {
         mensaje = "⏳ Encendiendo cámara...";
-        // Llama a la función JS definida en camara.js
         var exito = await JS.InvokeAsync<bool>("iniciarCamara", "videoEstudiante");
         mensaje = exito ? "✅ Cámara lista." : "❌ No se pudo acceder a la cámara.";
     }
@@ -127,15 +136,11 @@
     {
         try
         {
-            // Captura la imagen del stream de video
             var data = await JS.InvokeAsync<string>("capturarFoto", "videoEstudiante", "canvasEstudiante");
-
             if (!string.IsNullOrEmpty(data))
             {
                 estudiante.FotoBase64 = data;
                 mensaje = "✅ Foto capturada con éxito.";
-
-                // 🔥 CORRECCIÓN: Notifica a Blazor que debe redibujar la imagen del resultado
                 StateHasChanged();
             }
         }
@@ -155,7 +160,7 @@
             if (res.IsSuccessStatusCode)
             {
                 mensaje = "✅ ¡Estudiante registrado con éxito!";
-                estudiante = new Estudiante { EstaActivo = true }; // Limpia el formulario
+                estudiante = new Estudiante { EstaActivo = true };
                 StateHasChanged();
             }
             else

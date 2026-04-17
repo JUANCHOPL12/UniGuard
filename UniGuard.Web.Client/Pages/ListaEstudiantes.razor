@@ -5,31 +5,33 @@
 @rendermode InteractiveAuto
 
 <div class="container mt-4">
-    <div class="card shadow border-0">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-            <h3 class="mb-0">🛡️ Gestión de Estudiantes</h3>
-            <span class="badge bg-light text-primary">Admin Mode</span>
-        </div>
-        <div class="card-body">
+    <div class="card shadow-lg bg-white" style="border: 2px solid #8CC63F; border-radius: 12px; overflow: hidden;">
 
-            <div class="input-group mb-3 shadow-sm">
-                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+        <div class="card-header text-white d-flex justify-content-between align-items-center py-3" style="background-color: #8CC63F; border-bottom: none;">
+            <h3 class="mb-0 fw-bold"><i class="bi bi-shield-lock"></i> Gestión de Estudiantes</h3>
+            <span class="badge bg-white fw-bold shadow-sm" style="color: #8CC63F;">Admin Mode</span>
+        </div>
+
+        <div class="card-body p-4 bg-white">
+            <div class="input-group mb-4 shadow-sm" style="border-radius: 8px; overflow: hidden;">
+                <span class="input-group-text bg-white border-end-0" style="color: #8CC63F;"><i class="bi bi-search"></i></span>
                 <input type="text" class="form-control border-start-0"
                        placeholder="Buscar por cédula o nombre..."
+                       style="border-color: #eee;"
                        @bind="filtroBusqueda" @bind:event="oninput" />
             </div>
 
             @if (estudiantes == null)
             {
                 <div class="text-center my-5">
-                    <div class="spinner-border text-primary" role="status"></div>
-                    <p class="mt-2">Consultando base de datos...</p>
+                    <div class="spinner-border" style="color: #8CC63F;" role="status"></div>
+                    <p class="mt-2 fw-bold text-muted">Consultando base de datos UniGuard...</p>
                 </div>
             }
             else if (!EstudiantesFiltrados.Any())
             {
-                <div class="alert alert-info text-center">
-                    No se encontraron estudiantes con ese criterio.
+                <div class="alert text-center border-0 shadow-sm" style="background-color: #f9fff0; color: #8CC63F;">
+                    <i class="bi bi-info-circle"></i> No se encontraron estudiantes con ese criterio.
                 </div>
             }
             else
@@ -38,34 +40,40 @@
                     <table class="table table-hover align-middle">
                         <thead class="table-dark">
                             <tr>
-                                <th>Documento</th>
+                                <th class="ps-3">Documento</th>
                                 <th>Nombre Completo</th>
                                 <th class="text-center">Equipos</th>
                                 <th>Estado</th>
                                 <th class="text-center">Acción</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody style="border-top: 0;">
                             @foreach (var est in EstudiantesFiltrados)
                             {
-                                @* DOBLE CLIC PARA VER PERFIL *@
                                 <tr @ondblclick="() => VerPerfil(est.Id)"
                                     style="cursor: pointer;"
                                     title="Doble clic para ver detalles">
-                                    <td class="fw-bold text-primary">@est.Documento</td>
-                                    <td>@est.Nombres @est.Apellidos</td>
+                                    <td class="fw-bold ps-3" style="color: #8CC63F;">@est.Documento</td>
+                                    <td class="text-dark">@est.Nombres @est.Apellidos</td>
                                     <td class="text-center">
-                                        <span class="badge rounded-pill bg-info text-dark">
+                                        <span class="badge rounded-pill fw-bold px-3" style="background-color: #e8f5e9; color: #2e7d32;">
                                             @(est.Equipos?.Count ?? 0) Item(s)
                                         </span>
                                     </td>
                                     <td>
-                                        <span class="badge @(est.EstaActivo ? "bg-success" : "bg-danger")">
-                                            @(est.EstaActivo ? "Activo" : "Inactivo")
-                                        </span>
+                                        @if (est.EstaActivo)
+                                        {
+                                            <span class="badge bg-success px-3">Activo</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger px-3">Inactivo</span>
+                                        }
                                     </td>
                                     <td class="text-center">
-                                        <button class="btn btn-sm btn-outline-primary" @onclick="() => VerPerfil(est.Id)">
+                                        <button class="btn btn-sm btn-outline-dark fw-bold shadow-sm"
+                                                style="border-radius: 6px; border-color: #8CC63F; color: #333;"
+                                                @onclick="() => VerPerfil(est.Id)">
                                             🔍 Ver Perfil
                                         </button>
                                     </td>
@@ -74,7 +82,12 @@
                         </tbody>
                     </table>
                 </div>
-                <small class="text-muted fst-italic">* Tip: Haz doble clic sobre cualquier fila para ver la foto y equipos del estudiante.</small>
+                <div class="mt-3 p-2 rounded" style="background-color: #f8f9fa;">
+                    <small class="text-muted fst-italic">
+                        <i class="bi bi-lightbulb" style="color: #8CC63F;"></i>
+                        <strong>Tip:</strong> Haz doble clic sobre cualquier fila para ver la foto y equipos del estudiante.
+                    </small>
+                </div>
             }
         </div>
     </div>
@@ -84,7 +97,6 @@
     private List<Estudiante>? estudiantes;
     private string filtroBusqueda = "";
 
-    // Lógica de filtrado en tiempo real
     private IEnumerable<Estudiante> EstudiantesFiltrados =>
         estudiantes?.Where(e => string.IsNullOrWhiteSpace(filtroBusqueda) ||
                                 e.Documento.Contains(filtroBusqueda) ||
@@ -101,7 +113,6 @@
     {
         try
         {
-            // Cambiamos a Estudiante (modelo completo) para tener la lista de Equipos
             estudiantes = await Http.GetFromJsonAsync<List<Estudiante>>("api/Estudiantes");
         }
         catch (Exception ex)
