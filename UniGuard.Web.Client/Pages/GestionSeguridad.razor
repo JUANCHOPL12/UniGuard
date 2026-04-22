@@ -29,9 +29,10 @@
                             BUSCAR
                         </button>
 
-                        @if (userRole == "Administrador" && estudiante == null && !string.IsNullOrEmpty(cedulaBusqueda))
+                        @* Se simplifica la condición para que el botón no dependa del rol de Administrador si falla la búsqueda *@
+                        @if (estudiante == null && !string.IsNullOrEmpty(cedulaBusqueda) && mensaje.Contains("❌"))
                         {
-                            <button class="btn btn-success btn-lg shadow-sm fw-bold" @onclick="IrARegistrar">
+                            <button class="btn btn-success btn-lg shadow-sm fw-bold animate__animated animate__pulse" @onclick="IrARegistrar">
                                 <i class="bi bi-person-plus-fill"></i> REGISTRAR
                             </button>
                         }
@@ -128,9 +129,19 @@
 
             @if (!string.IsNullOrEmpty(mensaje))
             {
-                <div class="alert mt-3 text-center fw-bold shadow-sm bg-white"
+                <div class="alert mt-3 text-center fw-bold shadow-sm bg-white animate__animated animate__fadeIn"
                      style="border: 1px solid #8CC63F; border-left: 8px solid #8CC63F; color: #333;">
                     @mensaje
+
+                    @* Si el estudiante no existe, mostramos el botón de registro también aquí para que sea obvio *@
+                    @if (mensaje.Contains("❌"))
+                    {
+                        <div class="mt-2">
+                            <button class="btn btn-success fw-bold" @onclick="IrARegistrar">
+                                <i class="bi bi-person-plus-fill"></i> REGISTRAR ESTUDIANTE NUEVO
+                            </button>
+                        </div>
+                    }
                 </div>
             }
         </div>
@@ -138,7 +149,6 @@
 </div>
 
 @code {
-    // SE MANTIENE TODA TU LÓGICA ORIGINAL PARA EVITAR ERRORES
     private string cedulaBusqueda = "";
     private string nuevoSerial = "";
     private int nuevaMarcaId = 0;
@@ -179,6 +189,7 @@
         if (string.IsNullOrWhiteSpace(cedulaBusqueda)) return;
 
         mensaje = "🔍 Buscando...";
+        estudiante = null; // Limpiamos búsqueda anterior
         try
         {
             await ConfigurarSeguridad();
@@ -225,6 +236,7 @@
         }
         catch (Exception ex) { mensaje = "❌ Error: " + ex.Message; }
     }
+
     private async Task VincularEquipo()
     {
         if (estudiante == null || string.IsNullOrWhiteSpace(nuevoSerial) || nuevaMarcaId == 0) return;
@@ -234,8 +246,6 @@
             mensaje = "⏳ Vinculando equipo...";
             await ConfigurarSeguridad();
 
-            // Creamos el objeto del equipo
-            // IMPORTANTE: Ponemos EstadoActualId = 2 (FUERA) para que no entre de una vez
             var equipo = new Equipo
             {
                 Serial = nuevoSerial.Trim().ToUpper(),
@@ -245,7 +255,6 @@
                 FechaRegistro = DateTime.Now
             };
 
-            // ENVIAMOS SOLO EL EQUIPO (Eliminé la parte que creaba el Movimiento automáticamente)
             var respEq = await Http.PostAsJsonAsync("api/Equipos", equipo);
 
             if (respEq.IsSuccessStatusCode)
@@ -253,8 +262,6 @@
                 nuevoSerial = "";
                 nuevaMarcaId = 0;
                 mensaje = "✅ Equipo registrado. Ahora puede marcar la ENTRADA abajo.";
-
-                // Refrescamos la interfaz para que el equipo aparezca en la lista de abajo
                 await Buscar();
             }
             else
