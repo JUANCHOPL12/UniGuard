@@ -8,7 +8,7 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 // 1. Configuración del HttpClient (Asegúrate que el puerto 7151 sea el de tu API)
 builder.Services.AddScoped(sp => new HttpClient
 {
-    BaseAddress = new Uri("https://localhost:7151/")
+    BaseAddress = new Uri("https://uniguard-gnggbfb4auhdbbgn.brazilsouth-01.azurewebsites.net/")
 });
 
 // 2. 🔥 LA FORMA CORRECTA DE CONFIGURAR JSON EN EL CLIENTE 🔥

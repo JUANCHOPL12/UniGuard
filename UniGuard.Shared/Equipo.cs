@@ -12,7 +12,8 @@ public class Equipo
     [Required(ErrorMessage = "El serial es obligatorio")]
     public string Serial { get; set; } = string.Empty;
 
-    public string? Modelo { get; set; } = string.Empty;
+    [JsonPropertyName("Modelo")]
+    public string Modelo { get; set; } = string.Empty;
 
     public DateTime FechaRegistro { get; set; } = DateTime.Now;
 

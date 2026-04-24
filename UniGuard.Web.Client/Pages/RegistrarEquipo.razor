@@ -45,7 +45,9 @@
                             <div class="col-md-12">
                                 <label class="form-label fw-bold">Modelo / Referencia</label>
                                 <InputText @bind-Value="equipo.Modelo" class="form-control" placeholder="Ej: Pavilion 15, ThinkPad X1" />
+                                <ValidationMessage For="@(() => equipo.Modelo)" class="text-danger" />
                             </div>
+                            
                         </div>
 
                         <hr class="my-4" />
