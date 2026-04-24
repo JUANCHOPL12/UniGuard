@@ -78,8 +78,15 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Cargamos los datos actuales
-        estudiante = await Http.GetFromJsonAsync<Estudiante>($"api/Estudiantes/por-id/{Id}");
+        try
+        {
+            // CORRECCIÓN: Eliminamos "/por-id" para que coincida con el controlador
+            estudiante = await Http.GetFromJsonAsync<Estudiante>($"api/Estudiantes/{Id}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar datos: {ex.Message}");
+        }
     }
 
     private async Task OnInputFileChange(InputFileChangeEventArgs e)
