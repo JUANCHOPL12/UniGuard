@@ -7,17 +7,17 @@
 
 <div class="container mt-4">
     <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow border-0">
-                <div class="card-header bg-warning text-dark fw-bold">
-                    <i class="bi bi-pencil-square"></i> EDITAR INFORMACIÓN DEL ESTUDIANTE
+        <div class="col-md-9">
+            <div class="card shadow-lg border-0" style="border-radius: 15px;">
+                <div class="card-header bg-warning text-dark fw-bold p-3" style="border-radius: 15px 15px 0 0;">
+                    <h5 class="mb-0"><i class="bi bi-pencil-square"></i> EDITAR INFORMACIÓN DEL ESTUDIANTE</h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-4">
                     @if (estudiante == null)
                     {
                         <div class="text-center p-5">
                             <div class="spinner-border text-warning" role="status"></div>
-                            <p>Cargando datos para editar...</p>
+                            <p class="mt-2">Cargando datos del sistema...</p>
                         </div>
                     }
                     else
@@ -26,43 +26,69 @@
                             <DataAnnotationsValidator />
 
                             <div class="row">
-                                <div class="col-md-4 text-center mb-3">
-                                    <label class="fw-bold d-block mb-2">Foto de Perfil</label>
-                                    <img src="@estudiante.FotoBase64" class="img-thumbnail mb-2" style="width: 150px; height: 150px; object-fit: cover;" />
-                                    <InputFile OnChange="OnInputFileChange" class="form-control form-control-sm" />
-                                </div>
+                                <div class="col-md-4 text-center border-end">
+                                    <label class="fw-bold d-block mb-2 text-uppercase small">Foto de Perfil</label>
+                                    <div class="position-relative d-inline-block mb-3">
+                                        <img src="@estudiante.FotoBase64" class="img-thumbnail shadow-sm"
+                                             style="width: 180px; height: 180px; object-fit: cover; border-radius: 12px; border: 3px solid #f8f9fa;" />
+                                    </div>
 
-                                <div class="col-md-8">
-                                    <div class="mb-3">
-                                        <label class="form-label fw-bold">Documento (No editable)</label>
-                                        <input type="text" class="form-control bg-light" value="@estudiante.Documento" disabled />
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label fw-bold">Nombres</label>
-                                        <InputText @bind-Value="estudiante.Nombres" class="form-control text-uppercase" />
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label fw-bold">Apellidos</label>
-                                        <InputText @bind-Value="estudiante.Apellidos" class="form-control text-uppercase" />
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label fw-bold">Dirección</label>
-                                        <InputText @bind-Value="estudiante.Direccion" class="form-control" />
-                                    </div>
-                                    <div class="form-check form-switch mb-3">
-                                        <input class="form-check-input" type="checkbox" @bind="estudiante.EstaActivo" id="estadoCheck">
-                                        <label class="form-check-label fw-bold" for="estadoCheck">
-                                            Usuario Activo / Acceso Permitido
+                                    <div class="mb-4">
+                                        <label class="btn btn-sm btn-outline-secondary w-100">
+                                            <i class="bi bi-camera"></i> Cambiar Foto
+                                            <InputFile OnChange="OnInputFileChange" style="display:none;" />
                                         </label>
                                     </div>
-                                </div>
-                            </div>
 
-                            <div class="d-flex justify-content-end gap-2 mt-4">
-                                <button type="button" class="btn btn-secondary" @onclick="Cancelar">Cancelar</button>
-                                <button type="submit" class="btn btn-success">
-                                    <i class="bi bi-save"></i> Guardar Cambios
-                                </button>
+                                    <div class="p-3 rounded bg-light border">
+                                        <div class="form-check form-switch d-flex justify-content-center align-items-center gap-2">
+                                            <input class="form-check-input" type="checkbox" role="switch"
+                                                   @bind="estudiante.EstaActivo" id="estadoCheck" style="width: 45px; height: 22px;">
+                                            <label class="form-check-label fw-bold @(estudiante.EstaActivo ? "text-success" : "text-danger")" for="estadoCheck">
+                                                @(estudiante.EstaActivo ? "ACTIVO" : "BLOQUEADO")
+                                            </label>
+                                        </div>
+                                        <small class="text-muted" style="font-size: 0.7rem;">Control de acceso al campus</small>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-8 ps-md-4">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold small text-uppercase">Documento</label>
+                                            <input type="text" class="form-control bg-light border-0" value="@estudiante.Documento" disabled />
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold small text-uppercase">Teléfono</label>
+                                            <InputText @bind-Value="estudiante.Telefono" class="form-control" placeholder="Ej: 315..." />
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold small text-uppercase">Nombres</label>
+                                            <InputText @bind-Value="estudiante.Nombres" class="form-control text-uppercase" />
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold small text-uppercase">Apellidos</label>
+                                            <InputText @bind-Value="estudiante.Apellidos" class="form-control text-uppercase" />
+                                        </div>
+                                        <div class="col-md-12">
+                                            <label class="form-label fw-bold small text-uppercase">Correo Institucional</label>
+                                            <InputText @bind-Value="estudiante.CorreoInstitucional" class="form-control" placeholder="usuario@cun.edu.co" />
+                                        </div>
+                                        <div class="col-md-12">
+                                            <label class="form-label fw-bold small text-uppercase">Dirección de Residencia</label>
+                                            <InputText @bind-Value="estudiante.Direccion" class="form-control" />
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex justify-content-end gap-2 mt-5">
+                                        <button type="button" class="btn btn-outline-secondary px-4 fw-bold" @onclick="Cancelar">
+                                            CANCELAR
+                                        </button>
+                                        <button type="submit" class="btn btn-success px-4 fw-bold shadow">
+                                            <i class="bi bi-check-circle"></i> GUARDAR CAMBIOS
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </EditForm>
                     }
@@ -80,7 +106,6 @@
     {
         try
         {
-            // CORRECCIÓN: Eliminamos "/por-id" para que coincida con el controlador
             estudiante = await Http.GetFromJsonAsync<Estudiante>($"api/Estudiantes/{Id}");
         }
         catch (Exception ex)
@@ -104,12 +129,12 @@
 
         if (response.IsSuccessStatusCode)
         {
-            await JS.InvokeVoidAsync("alert", "Datos actualizados correctamente");
+            await JS.InvokeVoidAsync("alert", "✅ Los datos de " + estudiante?.Nombres + " se actualizaron correctamente.");
             Nav.NavigateTo($"/perfil-estudiante/{Id}");
         }
         else
         {
-            await JS.InvokeVoidAsync("alert", "Error al actualizar");
+            await JS.InvokeVoidAsync("alert", "❌ Error al intentar actualizar los datos.");
         }
     }
 
